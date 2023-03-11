@@ -16,9 +16,9 @@ name this object as `Facility` during this story.
 
 His experience said:
   
---- Your implementation of the `Facility` is very complex. You are
-using lot external stuff, a lot of helpers which are specific to the
-`Facility`. Why don't try to hide them?
+---&nbsp;Your implementation of the `Facility` is very complex. You are
+using a lot of external stuff, a lot of helpers which are specific to
+the `Facility`. Why don't try to hide them?
 
 --- OK, --- Bob thought. --- I know a good pattern for it --- the
 "Singleton". I'll use it along with PIMPL idiom. The details of the

@@ -35,6 +35,9 @@ plugins:
   - jekyll-feed
   - jekyll-remote-theme
 encoding: UTF-8
+
+kramdown:
+  entity_output: symbolic
   
 # Exclude from processing.
 # The following items will not be processed, by default.
