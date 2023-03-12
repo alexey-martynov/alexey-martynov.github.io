@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Registration Maps in C++
-permalink: c++-registration-maps.html
+permalink: /posts/c++-registration-maps.html
 ---
 
 Object maps is a construct which hits initialization order issues very
@@ -11,7 +11,7 @@ their identifiers. Experienced developer who is familiar with design
 pattern knows pattern "Factory".
 
 This article continues [C++
-Initialization]({{'/c++-static-initialization.html' | relative_url}}).
+Initialization](/posts/c++-static-initialization.html).
 
 # Straightforward Solution
 

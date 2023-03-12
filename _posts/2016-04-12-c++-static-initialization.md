@@ -1,7 +1,7 @@
 ---
 layout: post
 title: About Static Initialization in C++
-permalink: c++-static-initialization.html
+permalink: /posts/c++-static-initialization.html
 ---
 
 Initialization of a C++ program might be very tricky due to amount of
@@ -325,6 +325,6 @@ Injection](https://en.wikipedia.org/wiki/Dependency_injection) solves
 all issues with dependencies. But it might be tedious to provide
 global dependencies like logger via Dependency Injection.
 
-In the [C++ Registration Maps](/c++-registration-maps.html) I'll
+In the [C++ Registration Maps](/posts/c++-registration-maps.html) I'll
 continue to explore possible ways to make safe namespace scope object
 initialization.
