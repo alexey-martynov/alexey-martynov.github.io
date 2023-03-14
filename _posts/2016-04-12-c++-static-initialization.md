@@ -8,7 +8,7 @@ Initialization of a C++ program might be very tricky due to amount of
 facilities involved in the process. The possible pitfall and solutions
 discussed here.
 
-# A Sad Story
+## A Sad Story
 
 One day Bob, a very skilled C++ developer, discovered a probem: he
 wanted to have a single instance of an object in his program. We will
@@ -117,8 +117,7 @@ the variable `instance` is called *after* the first call to the `Facility::getIn
 
 Now he needs to fix this implementation.
 
-Program Startup
----------------
+## Program Startup
 
 The machinery behind Bob's adventures is named "dynamic object of an
 object in namespace scope". It's important part of any C++ program.
@@ -172,13 +171,13 @@ The ELF and Linux impose less restrictions but it's preferrable to use
 strict rules from Microsoft because it allows future porting of the
 program to the Microsoft Windows platform.
 
-# Solution
+## Solution
 
 It's very sad but no perfect solution exists for the Bob's
 problem. Lets take a look at the possible solutions and their
 drawbacks.
 
-## Remove `std::unique_ptr`
+### Remove `std::unique_ptr`
 
 The code will look like:
 
@@ -205,7 +204,7 @@ __before__ its last client depending on the implementation. It might
 not be a problem again but this case be must considered before
 implementing.
 
-## Remove Boost and Use C++ 11 or Newer Standard
+### Remove Boost and Use C++ 11 or Newer Standard
 
 The C++ 11 introduced multithreading support to C++ standard. This
 means that standard library and *language* knows about threads and
@@ -256,7 +255,7 @@ least GCC ensures thread safety here.
 More important that this solution has the same issue as previous one with
 `atexit` --- `instance` might die before its last client.
 
-## Create Explicit Initialization and Deinitialization
+### Create Explicit Initialization and Deinitialization
 
 ```diff
 - static std::unique_ptr<FacilityImpl> instance;
@@ -313,7 +312,7 @@ The [Schwartz/Nifty
 Counter](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Nifty_Counter)
 can assist in such initialization and deinitialization. 
 
-# Conclusion
+## Conclusion
 
 The is no completely safe way to get guaranteed order of
 initialization of objects in namespace scope. The different solutions

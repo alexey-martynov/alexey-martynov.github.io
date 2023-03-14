@@ -13,7 +13,7 @@ pattern knows pattern "Factory".
 This article continues [C++
 Initialization](/posts/c++-static-initialization.html).
 
-# Straightforward Solution
+## Straightforward Solution
 
 The most often used solution is to create a function which knows about
 all objects by including headers of the objects to function's
@@ -89,7 +89,7 @@ The example above can be improved in many ways:
 
 But all these issues are skipped now for clarity.
 
-# Resolving "Slow Compilation" Issue
+## Resolving "Slow Compilation" Issue
 
 It is possible to avoid inclusion of all object's definition to
 translation unit with factory by introducing a factory function for
@@ -172,7 +172,7 @@ dependencies. But it has the following drawbacks:
 To improve solution the automatic building of this registration map
 can be invented.
 
-# Avoiding Manual Management
+## Avoiding Manual Management
 
 The static or singleton collection is created to register all
 supported objects. This map can be easily forward-declared and used
@@ -217,7 +217,7 @@ static struct Object1Registrar
   }
 } object1_registrar;
 
-// In the &quot;Object2.cpp&quot; file
+// In the "Object2.cpp" file
 static Base * Object2_create()
 {
 	return new Object2;
@@ -239,7 +239,7 @@ All solutions for singleton can't work here because they require
 There is no perfect solution for this issue. The most effective
 solutions are platform dependent.
 
-# A "Portable Solution"
+## A "Portable Solution"
 
 Any portable solution should work within C++ standard. A possible
 solution might look like:
@@ -353,7 +353,7 @@ ObjectMap.o: Object1.cpp Object2.cpp Base.hpp
         sh ./generate-map.sh $(filter-out %.hpp,$^) | $(CXX) -x c++ -c -o $@ $(CPPFLAGS) $(filter-out -M%,$(CXXFLAGS)) -
 ```
 
-# Non-portable Solution
+## Non-portable Solution
 
 Although the portable solution is much faster and efficient than the
 first one, it's safer than the version with the singleton map, it
@@ -371,7 +371,7 @@ a look at the insert. This solution can be implemented by GCC on
 Linux, Apple Clang on MacOS  and Microsoft Visual C++ on Microsoft
 Windows.
 
-> ### Binary Sections
+> #### Binary Sections
 >
 > When a linker constructs a final binary file it places objects to
 > the separate parts of the target file. These parts have  names
@@ -519,7 +519,7 @@ semi-documented compiler and linker features. So it would be wise to
 avoid its usage.
 
 
-# Conclusion
+## Conclusion
 
 The order of the global object initialization can give a lot of issues
 during implementation of registration maps. It's much safer to use POD
