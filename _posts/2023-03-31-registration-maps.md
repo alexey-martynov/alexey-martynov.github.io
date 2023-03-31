@@ -13,6 +13,11 @@ pattern knows pattern "Factory".
 This article continues [C++
 Initialization](/posts/c++-static-initialization.html).
 
+### Changelog
+
+31 March 2023
+: Added information about LD quirks .
+
 ## Straightforward Solution
 
 The most often used solution is to create a function which knows about
@@ -467,6 +472,40 @@ The makefile update:
 section-regstration: section-registration.o Base.o Object1.o Object2.o objects.ld
         g++ -Wall -o $@ $(filter-out objects.ld,$^) -Tobjects.ld
 ```
+
+This can achieved without custom linker script: the LD defines 2
+symbols for custom section `__start_<SECTION>` and `__stop_<SECTION>`
+for section's start and just past the end of section. The `<SECTION>`
+in that identifiers is the section name passed to the attribute.
+
+> #### Note on LD
+>
+> The LD joins objects in section and doesn't take into account any
+> padding. So the can conflict with C and C++ pointer
+> arithmetic. Consider the following example:
+>
+> ```
+> struct data_ {
+>   const char * name;
+>   bool enabled;
+> };
+> ```
+>
+> This structure will have size of 16 bytes on 64-bit platform: 8
+> bytes pointer to `char`, 1 byte `bool` and 7 bytes padding to allow
+> proper alignment of an array elements.
+>
+> But it is possible to have section collected by LD with 2 structures
+> where offset between them is 9 bytes.
+>
+> Although it is possible to adjust offsets manually on byte level
+> without C machinery this will lead to faults on every platform that
+> doesn't handle unaligned data "silently". x86-based platforms handle
+> misalignment silently with performance penalty but, for example,
+> PowerPC doesn't allow unaligned data.
+>
+> As conclusion the safest approach is to collect pointers to
+> structures to custom section. 
 
 Although GCC exist on Microsoft Windows platform I can't convince
 toolchain to produce proper PE binary with this trick.
