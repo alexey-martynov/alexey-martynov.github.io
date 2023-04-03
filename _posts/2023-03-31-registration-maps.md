@@ -240,7 +240,6 @@ static struct Object2Registrar
 But now the factory method starts to suffer from the order of the
 initialization.
 
-All solutions for singleton can't work here because they require
 There is no perfect solution for this issue. The most effective
 solutions are platform dependent.
 
@@ -406,7 +405,7 @@ because of different function sizes. The simplest format of the
 section is a list of function pointers. These pointers can be a global
 variables initialized automatically during module load and these
 variables are marked with unique section name. The linker will collect
-all these variables to the section section building an array. Because
+all these variables to the section building an array. Because
 size of these pointers is fixed it can be easily iterated if size of
 the section is known.
 
@@ -469,11 +468,11 @@ INSERT AFTER .rodata ;
 The makefile update:
 
 ```
-section-regstration: section-registration.o Base.o Object1.o Object2.o objects.ld
+section-registration: section-registration.o Base.o Object1.o Object2.o objects.ld
         g++ -Wall -o $@ $(filter-out objects.ld,$^) -Tobjects.ld
 ```
 
-This can achieved without custom linker script: the LD defines 2
+This can be achieved without thecustom linker script: the LD defines 2
 symbols for custom section `__start_<SECTION>` and `__stop_<SECTION>`
 for section's start and just past the end of section. The `<SECTION>`
 in that identifiers is the section name passed to the attribute.
@@ -481,7 +480,7 @@ in that identifiers is the section name passed to the attribute.
 > #### Note on LD
 >
 > The LD joins objects in section and doesn't take into account any
-> padding. So the can conflict with C and C++ pointer
+> padding. So this can conflict with C and C++ pointer
 > arithmetic. Consider the following example:
 >
 > ```
