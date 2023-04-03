@@ -8,6 +8,9 @@ Initialization of a C++ program might be very tricky due to amount of
 facilities involved in the process. The possible pitfall and solutions
 discussed here.
 
+* toc
+{:toc}
+
 ## A Sad Story
 
 One day Bob, a very skilled C++ developer, discovered a probem: he

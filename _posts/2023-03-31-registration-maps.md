@@ -13,10 +13,10 @@ pattern knows pattern "Factory".
 This article continues [C++
 Initialization](/posts/c++-static-initialization.html).
 
-### Changelog
-
-31 March 2023
-: Added information about LD quirks .
+## Table of Contents
+{:.no_toc}
+* toc
+{:toc}
 
 ## Straightforward Solution
 
@@ -375,7 +375,7 @@ a look at the insert. This solution can be implemented by GCC on
 Linux, Apple Clang on MacOS  and Microsoft Visual C++ on Microsoft
 Windows.
 
-> #### Binary Sections
+> *Binary Sections*
 >
 > When a linker constructs a final binary file it places objects to
 > the separate parts of the target file. These parts have  names
@@ -477,7 +477,7 @@ symbols for custom section `__start_<SECTION>` and `__stop_<SECTION>`
 for section's start and just past the end of section. The `<SECTION>`
 in that identifiers is the section name passed to the attribute.
 
-> #### Note on LD
+> *Note on LD*
 >
 > The LD joins objects in section and doesn't take into account any
 > padding. So this can conflict with C and C++ pointer
@@ -564,3 +564,9 @@ during implementation of registration maps. It's much safer to use POD
 types as global objects because they initialized before any code
 inside module is executed. But usage of such types as registration
 maps increases manual work or produces platform-dependent solutions.
+
+## Changelog
+
+31 March 2023
+: Added information about LD quirks .
+
