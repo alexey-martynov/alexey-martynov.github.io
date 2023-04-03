@@ -472,7 +472,7 @@ section-registration: section-registration.o Base.o Object1.o Object2.o objects.
         g++ -Wall -o $@ $(filter-out objects.ld,$^) -Tobjects.ld
 ```
 
-This can be achieved without thecustom linker script: the LD defines 2
+This can be achieved without the custom linker script: the LD defines 2
 symbols for custom section `__start_<SECTION>` and `__stop_<SECTION>`
 for section's start and just past the end of section. The `<SECTION>`
 in that identifiers is the section name passed to the attribute.
