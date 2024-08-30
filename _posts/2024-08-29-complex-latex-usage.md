@@ -21,7 +21,7 @@ XeLaTeX.
 > judgements.
 >
 > This article can't and doesn't try to replace LaTeX guides. Please
-> refer to such guides and package's reference documents for and extra
+> refer to such guides and package's reference documents for an extra
 > details about commands mentioned.
 
 ## Table of Contents
