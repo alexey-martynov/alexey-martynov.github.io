@@ -62,7 +62,7 @@ have a set of related documents aside from bureaucratic requirements:
 This set of documents has a lot of cross-references and shared
 materials:
 
-* The class diagrams, for example, need to included to textbook,
+* The class diagrams, for example, need to be included to textbook,
   presentation and corresponding handout. They should be updated in
   all places simultaneously.
 
