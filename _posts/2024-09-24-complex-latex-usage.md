@@ -486,7 +486,8 @@ in two parts:
    and miniature of slide.
 
 The special program like
-[SplitShow](https://github.com/mpflanzer/splitshow/) can split such
+[SplitShow](https://github.com/mpflanzer/splitshow/) or [Dual-Screen
+PDF Viewer](https://dspdfviewer.danny-edel.de) can split such
 page and show slide on one monitor and presenter screen on another.
 
 Some samples are to complex to copy their contents from projected
@@ -811,6 +812,9 @@ and extra attention and some diligence. Personally I've found that
 recommendations above dramatically simplifies this work.
 
 ## Changelog
+
+24 September 2024
+: Add link to Dual-Screen PDF Viewer
 
 29 August 2024
 : Initial version.
