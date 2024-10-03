@@ -132,7 +132,7 @@ them to separate directories. The corresponding figures, tables and
 code samples are placed in the same directory. The top level document
 should use `\input` directive to read chapters.
 
-It is convenient have figure and table files in complete form: with
+It is convenient to have figure and table files in a complete form: with
 `figure`/`tabular` environments, captions and so on. This gives the
 same labels and formatting in all documents.
 
