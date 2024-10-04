@@ -14,7 +14,10 @@ of related documents which evolve over the time using
 LaTeX.
 
 Everything in this article is applicable to PDF LaTeX or
-XeLaTeX.
+XeLaTeX unless compatibility issues explicitly stated.
+
+> NOTE: this article will update with new information and fixes. Its
+> publishing date will change accordingly.
 
 > Disclaimer: this article contains personal vision which might not
 > match somebody else vision. Also it contains some value
@@ -504,6 +507,22 @@ document rendered in special mode `handout`:
 The resulting PDF can be given to students to reduce amount of their
 work.
 
+### Issues with overlays
+
+The important difference between `\only` and `\onslide` greatly
+affects presentation: the content of `\only` doesn't occupy space on
+frames not matched overlay specification but content of `\onslide`
+does. This allows to create stack of pictures, for example, when every
+level of stack has its own frame. In book all these pictures will be
+placed one under/aside other. And handout produces the same. This may
+lead to vertical or horizontal overflow and clipping.
+
+The better result can be achieved by:
+
+* splitting big content to parts;
+* placing every part to individual presentation frame manually;
+* collect parts to single figure in book.
+
 ## Integrating Sample Code
 
 The almost any Computer Science textbook will contain a lot of code
@@ -628,6 +647,44 @@ Additional small notes about listings in presentations:
   ellipsis can be inserted via `escapeinside` and `\ldots`. The small
   bonus: this ellipsis visually differs from three points used as
   syntactic construction in C and C++.
+
+### Existing Issues
+
+It is possible to insert more than one range of source code to
+single listing. Unfortunately this arises some issues:
+
+* Inserting code with range markers inside like
+  `linerange={mainBegin-mainEnd}` with source
+
+
+   ```c++
+/*{mainBegin}*/
+int main()
+{
+  ...
+  /*{returnBegin}*/
+  return 0; /*$\label{return-exit-code}$*/
+  /*{returnEnd}*/
+}
+/*{mainEnd}*/
+   ```
+
+  will show intermediate markers inside. This is inconvenient in most
+  cases. It is possible to hide them by assigning font color matched
+  to background color but this doesn't prevent copying of them.
+
+* Inserting multiple ranges via
+  `linerange={mainBegin-mainEnd1,returnBegin-returnEnd}` is possible
+  only when `mainEnd1` and `returnBegin` are placed on different
+  lines.
+
+* When multiple consecutive ranges are inserted in the same listing
+  and line numbers are got from source file the hole in numbering
+  exists because listing misses number from range marked line.
+
+* In case of assigned first line number to listing like
+  'firstnumber=1` all ranges in listing will start from this number
+  which is inconvenient.
 
 ## Version Control
 
@@ -813,9 +870,17 @@ recommendations above dramatically simplifies this work.
 
 ## Changelog
 
+4 October 2024
+: Added:
+    * A note.
+
+    * List of "listings" package issues with ranges and line
+      numbering.
+
+    * Way of handling `\only` and `\onslide` effects.
+
 24 September 2024
 : Add link to Dual-Screen PDF Viewer
 
 29 August 2024
 : Initial version.
-
