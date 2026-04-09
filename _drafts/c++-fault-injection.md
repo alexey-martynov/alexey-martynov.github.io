@@ -205,4 +205,115 @@ be reduced.
 
 # Handling C functions and system calls
 
+The system calls are represented as free functions like `write()` or
+`close()`. To simulate errors from such functions dependency injection
+might work but code become complicated. The following ways are
+available without any low level hacks:
+
+1. Introduce abstraction like "IFile" and provide default
+   implementation which perform system calls. In tests the test
+   version should be provided similar to previous section. This might
+   require complex Dependency Injection framework or creation of
+   factories.
+
+2. Inject pointers to functions. This way require injection of set of
+   related functions, for example, `creat()`, `read()` and
+   `close()` should go together and `write()` with `lseek()` may
+   accompany them. So if number of related functions is grater than 2
+   the interface creation is better.
+
+But what if *all* calls should provide simulated errors? For free
+functions on Linux platform function interception is possible. To do
+this the following steps should be performed:
+
+1. The main program should be dynamically linked. Any statically
+   linked program doesn't involve `ld` in startup process so nobody
+   handle next steps.
+
+2. The required mock function implementations should be placed to
+   shared object (dynamic library). For example, we want to intercept
+   `open()` and `close()`. Our mock implementations should be placed
+   as external functions to a library, for example, `libmock.so`.
+
+3. The library with mocks is loaded as the very first library via
+   setting to environment `LD_PRELOAD=libmock.so` before starting the
+   program. For example, command might look like
+   `LD_PRELOAD=libmocks.so ./sample`.
+
+Sounds simple like "I dropped the atom bomb and it went off" (many
+thanks to Harry Harrison) but involves many complex behaviors from
+`ld`.
+
+At the first the dynamically linked program is very similar to shared
+object. So when dynamically linked program is started its startup is
+performed via `ld`. This allows to control its behavior via
+environment. The `LD_PRELOAD` is one of such environment variables.
+
+The second aspect: it is possible to load multiple shared objects
+which export the same symbol (i.e. function). The regular process of
+calling function will call the function from the very first
+library. Since libraries from `LD_PRELOAD` are loaded first even
+before main program their symbols win in regular symbol lookup.
+
+The third aspect: the mock implementation may require access to true
+implementation. For example, the `open()` and `close()` calls are
+intercepted but `read()` and `write()` are not. Since the program
+will call them the mocked implementation of `open()` must return
+proper file descriptor if it doesn't report simulated error. The same
+is applicable to `close()`: it definitely must close proper file
+descriptors via system call. So calls to true implementation in mocks
+are imminent.
+
+The fourth aspect: a nice pitfall is true symbols names. The C++
+function names becomes mangled when exported from object file.
+
+> TODO: insert sample of names
+
+To
+intercept them their mangled names should be used. This shouldn't be a
+problem when `libmocks.so` is written in C++ but this not always
+possible.
+
+The fifth aspect: another pitfall is created by "glibc". Some
+functions are versioned. During compilation the calls to versioned
+functions are inserted depending on version of "glibc" used and
+compile flags/definitions. So actual standard library contains set of
+version implementations allowing to use single library to replace old
+ones without recompilation of programs. As the result the mock
+function should take care of versioning.
+
+> TODO: insert sample from "glibc"
+
+So the process of interception becomes as little bit complex.
+
+Lets implement the same mocked `write()` call as in previous
+section. The mocked `write()` will report error when write operation
+covers LBA 8192 in file `/dev/sdt0`. To properly handle this the
+mocking library needs to know which file descriptors refer to this
+device. So `open()` call should be intercepted too. The  `creat()`,
+`openat()`, `openat2()`, vector I/O, file descriptor duplication and
+file system links handling are omitted for brevity and clarity.
+
+Since `open()` is intercepted the `close()` should be intercepted too.
+
+With all these requirements the implementation will look like:
+
+1. List of known file descriptors which refer to our device.
+
+2. Intercepted `open()` function which inspects a name and records
+   file descriptor received from true implementation if file name is
+   matches.
+
+3. Intercepted `close()` function which removes file descriptor from
+   list if it stored there. After that the true implementation is
+   called.
+
+4. Intercepted `write()` function. It will analyze file
+   descriptor. If descriptor is stored in list the current position
+   and I/O size is analyzed whether it covers "faulty" LBA. If faulty
+   LBA is involved in I/O the `EIO` error is returned instead of
+   calling true implementation.
+
+> TODO: add sample
+
 # Fault Injection
