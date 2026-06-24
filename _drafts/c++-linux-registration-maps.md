@@ -5,11 +5,10 @@ permalink: /posts/c++-linux-registration-maps.html
 tag: C++
 ---
 
-{% assign previous_post = site.posts | find: "url", "/posts/c++-registration-maps.html" %}
-
+{% assign previous_post = site.posts | where: "url", "/posts/c++-registration-maps.html" | first %}
 The technique from a [{{previous_post.title}}]({{previous_post.url}})
 post works fine when program is linked statically. But most of
-programs is linked dynamically and this breaks logic from [previous]({{previous_post.url}}).
+programs is linked dynamically and this breaks logic from previous [article]({{previous_post.url}}).
 
 This article continues
 [{{previous_post.title}}]({{previous_post.url}}).
@@ -335,11 +334,80 @@ complete registration map:
 
 1. Iterate shared objects.
 2. For every shared object get handle to it.
-3. Look for specific symbol describing module it every shared object.
+3. Look for specific symbol describing module in every shared object.
 4. If symbol is found take data and build registration map.
 
-TODO: `dl_iterate_phdr()`
+This looks like a simple task but some caveats may break the idea:
 
-## Thread Safety
+* The first issue is that `dl_iterate_phdr()` gives information about
+  file name of loaded shared object in `dlpi_name` member but not a
+  handle. And this name will be empty for the main program.
+
+* The handle can be obtained via `dlopen()`. The first parameter of
+  `dlopen()` is a name or path of shared object to load. The `NULL`
+  (`nullptr`) will return handle for the main program.
+
+* The returned handle should be released via `dlcose()` call.
+
+* The symbol lookup is performed via `dlsym()` function. Since it
+  performs breadth fist search over dependency tree the received
+  non-`NULL` addresses should be deduplicated, for example, placing
+  them to a `std::set`. This makes impossible to tell which exact
+  shared object contains symbol but usually this is not an issue.
+
+* The C++ symbols are mangled so `initModule` becomes something
+  special. The demangled names can be viewed with `nm -C <so file>`
+  utility. The `dlsym()` function knows nothing about mangling and
+  looks for exact name of symbol.
+
+  To mitigate this problem the symbol should have `extern "C"`
+  declaration. This is not a problem for function but for global
+  variables the `extern "C"` block should be used. For example:
+
+  ```c++
+  extern "C" {
+    const module_info_t module_info {
+      .begin = __start_OBJECTS,
+      .end = __stop_OBJECTS,
+    };
+  }
+  ```
+
+* There is no simple way to detect whether pointer from `dlsym()`
+  points to function or variable.
+
+Taking into account everything above the following function will
+iterate over all registration entries in running process:
+
+The logic can be converted to a C++ iterator. This allows simple
+integration with other C++ facilities.
 
 ## Unloading Shared Object
+
+The loaded shared objects fall to one of the following categories:
+
+* Can't be unloaded. This is a main program and all its dependencies
+  including transitive. Everything loaded via `LD_PRELOAD` placed to
+  this category too.
+
+* Can be unloaded. All other shared objects loaded via `dlopen()` in
+  this category.
+
+Unloading shared object is a very dangerous operation since it
+invalidates all pointers and references contained in unloaded shared
+object and it dependencies too. This includes:
+
+* Pointers to functions and variables in shared object.
+* C++ type info from shared object.
+* Virtual Tables for types from shared object.
+
+So every unload should be performed with extra care. In multithreaded
+program this task becomes more complex because one thread might try to
+unload shared object while other iterates over it.
+
+The best way to solve the issue is pinning of the shared object: every
+pointer to dynamically loaded shared object is bound with handle to
+that shared object. When all pointers to shared object released the
+shared object can be unloaded.
+
+TODO: Example
