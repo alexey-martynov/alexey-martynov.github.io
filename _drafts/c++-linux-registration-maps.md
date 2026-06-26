@@ -187,7 +187,7 @@ may have external linkage but they always has unique name for every
 translation unit so they don't clash. This requires because classes
 can't have internal linkage.
 
-> NOTE: the free functions from anonymous namespaces receive internal
+> NOTE: The free functions from anonymous namespaces receive internal
 > linkage implicitly.
 
 > NOTE: The GDB might have issues during lookup of symbols (variables
@@ -379,6 +379,44 @@ This looks like a simple task but some caveats may break the idea:
 Taking into account everything above the following function will
 iterate over all registration entries in running process:
 
+```c++
+using module_list_t = std::set<const module_info_t *>
+
+…
+
+static int on_header(dl_phdr_info * info, size_t size, void * data)
+{
+    module_list_t * ctx = static_cast<module_list_t *>(data);
+    void * handle = dlopen((((info->dlpi_name == nullptr) || (*info->dlpi_name == 0x00))
+          ? nullptr
+          : info->dlpi_name),
+        RTLD_LAZY);
+
+    if (handle != nullptr) {
+        void * module_addr = dlsym(handle, "module_info");
+
+        dlclose(handle);
+
+        if (module_addr != nullptr) {
+            modules->insert(static_cast<const module_info_t *>(module_addr));
+        }
+    }
+
+    return 0;
+}
+
+void populate()
+{
+  module_list_t modules;
+
+  dl_iterate_phdr(on_header, &modules);
+}
+```
+
+The test for main program shared object is a little bit paranoid
+because it handles empty string and missing string but shared object
+enumeration shouldn't be on critical path so playing safe is better.
+
 The logic can be converted to a C++ iterator. This allows simple
 integration with other C++ facilities.
 
@@ -410,4 +448,300 @@ pointer to dynamically loaded shared object is bound with handle to
 that shared object. When all pointers to shared object released the
 shared object can be unloaded.
 
-TODO: Example
+To achieve this a pair of classes can be created:
+
+* `DynamicModule` represents loaded shared object and holds handle.
+* `DynamicModuleSymbol` represents resolved symbol and holds pointer
+  to symbol _and_ handle.
+
+Although it is possible to increase shared object reference counter by
+calling `dlopen()` again it is inefficient because:
+
+1. `dlopen()` not so fast because requires search.
+2. Requires to hold name of the shared object which is a string. In
+   general case it is a full path of the module.
+
+So it is more efficient to create a structure with 2 members: handle
+and reference count. Pointer to this structure will be shared between
+`DynamicModule` and `DynamicModuleSymbol`.
+
+The `DynamicModuleSymbol` is a template receiving a type of value to
+point to. The `DynamicModule` resolves symbol to pointer, casts it to
+specific type and returns `DynamicModuleSymbol`.
+
+So implementation of `DynamicModule` can look like this:
+
+```c++
+class DynamicModule
+{
+public:
+  DynamicModule(const char* name, int flags = RTLD_LAZY):
+      handle_{new module_handle_t}
+  {
+    handle_->refs = 1;
+    handle_->handle = dlopen(((name != nullptr) && (*name != 0x00)) ? name : nullptr, flags);
+
+    if (handle_->handle == nullptr) {
+      delete handle_;
+
+      throw std::runtime_error{dlerror()};
+    }
+  }
+
+  DynamicModule(const std::string& name):
+      DynamicModule(name.c_str())
+  {
+  }
+
+  DynamicModule(const DynamicModule& rhs) noexcept:
+      handle_{rhs.handle_}
+  {
+    if (handle_ != nullptr) {
+      ++handle_->refs;
+    }
+  }
+
+  DynamicModule(DynamicModule&& rhs) noexcept:
+      handle_{std::exchange(rhs.handle_, nullptr)}
+  {
+  }
+
+  ~DynamicModule() noexcept
+  {
+    reset();
+  }
+
+  DynamicModule& operator=(const DynamicModule& rhs) noexcept
+  {
+    if (this != &rhs) {
+      reset();
+
+      handle_ = rhs.handle_;
+      if (handle_ != nullptr) {
+          ++handle_->refs;
+      }
+    }
+
+    return *this;
+  }
+  DynamicModule& operator=(DynamicModule&& rhs) noexcept
+  {
+    if (this != &rhs) {
+      reset();
+
+      handle_ = std::exchange(rhs.handle_, nullptr);
+    }
+
+    return *this;
+  }
+
+  explicit operator bool() const noexcept
+  {
+    return handle_ != nullptr;
+  }
+
+  bool operator!() const noexcept
+  {
+    return handle_ == nullptr;
+  }
+
+  bool operator==(const DynamicModule& rhs) const noexcept
+  {
+    return (handle_ == rhs.handle_)
+        || ((handle_ != nullptr)
+            && (rhs.handle_ != nullptr)
+            && (handle_->handle == rhs.handle_->handle));
+  }
+
+  bool operator!=(const DynamicModule& rhs) const noexcept
+  {
+    return !operator==(rhs);
+  }
+
+  template <typename T>
+  DynamicModuleSymbol<T> get(const char* name)
+  {
+    if (handle_ == nullptr) {
+      throw std::runtime_error{"Lookup for symbol without shared object is forbidden"};
+    }
+
+    return DynamicModuleSymbol<T>{handle_, static_cast<T*>(dlsym(handle_->handle, name))};
+  }
+
+  template <typename T>
+  DynamicModuleSymbol<T> get(const std::string& name)
+  {
+    return get<T>(name.c_str());
+  }
+
+  void reset() noexcept
+  {
+    if (handle_ != nullptr) {
+      if (--handle_->refs == 0) {
+        delete handle_;
+      }
+      handle_ = nullptr;
+    }
+  }
+
+private:
+  struct module_handle_t
+  {
+    void* handle;
+    std::atomic<int> refs;
+  };
+
+  module_handle_t* handle_;
+
+  template <typename>
+  friend class DynamicModuleSymbol;
+};
+```
+
+The implementation of `DynamicSymbolModule` is a little bit tricky
+because it s convenient to behave as smart pointer when type of symbol
+is value and behave as function object when type of symbol is
+function. To achieve this the C++ Concepts can be used as requirement
+for members:
+
+* The `operator *` and `operator ->` should be available when type is
+  not a function.
+* The `operator ()` should be available when type is function.
+
+As the result might be implemented as:
+
+```c++
+template <typename T>
+class DynamicModuleSymbol
+{
+public:
+  DynamicModuleSymbol(const DynamicModuleSymbol<T>& rhs) noexcept:
+      handle_{rhs.handle_},
+      ptr_{rhs.ptr_}
+  {
+    if (handle_ != nullptr) {
+      ++handle_->refs;
+    }
+  }
+  DynamicModuleSymbol(DynamicModuleSymbol<T>&& rhs) noexcept:
+      handle_{std::exchange(rhs.handle_, nullptr)},
+      ptr_{std::exchange(rhs.ptr_, nullptr)}
+  {
+  }
+
+  DynamicModuleSymbol<T>& operator=(const DynamicModuleSymbol<T>& rhs) noexcept
+  {
+    reset();
+
+    handle_ = rhs.handle_;
+    ptr_ = rhs.ptr_;
+    if (handle_ != nullptr) {
+      ++handle_->refs;
+    }
+
+    return *this;
+  }
+
+  DynamicModuleSymbol<T>& operator=(DynamicModuleSymbol<T>&& rhs) noexcept
+  {
+    if (this != &rhs) {
+      reset();
+
+      handle_ = std::exchange(rhs.handle_, nullptr);
+      ptr_ = std::exchange(rhs.ptr_, nullptr);
+    }
+
+    return *this;
+  }
+
+  explicit operator bool() const noexcept
+  {
+    return ptr_ != nullptr;
+  }
+
+  bool operator!() const noexcept
+  {
+    return ptr_ == nullptr;
+  }
+
+  bool operator==(const DynamicModuleSymbol<T>& rhs) const noexcept
+  {
+    return ptr_ == rhs.ptr_;
+  }
+
+  bool operator!=(const DynamicModuleSymbol<T>& rhs) const noexcept
+  {
+    return ptr_ != rhs.ptr_;
+  }
+
+  T& operator*() const noexcept requires(!std::is_function_v<T>)
+  {
+    return *ptr_;
+  }
+
+  T* operator->() const noexcept requires(!std::is_function_v<T>)
+  {
+    return ptr_;
+  }
+
+  template <typename... Args>
+  requires std::invocable<T, Args...>
+  std::invoke_result_t<T, Args...> operator()(Args&& ... args) noexcept(std::is_nothrow_invocable_v<T, Args...>)
+  {
+    return (*ptr_)(std::forward<Args...>(args)...);
+  }
+
+  void reset() noexcept
+  {
+    if (handle_ != nullptr) {
+      if (--handle_->refs) {
+        delete handle_;
+      }
+      handle_ = nullptr;
+      ptr_ = nullptr;
+    }
+  }
+
+private:
+  DynamicModule::module_handle_t* handle_;
+  T* ptr_;
+
+  DynamicModuleSymbol(DynamicModule::module_handle_t* handle, T* ptr) noexcept:
+      handle_{handle},
+      ptr_{ptr}
+  {
+    if (handle_ != nullptr) {
+      ++handle_->refs;
+    }
+  }
+
+  friend class DynamicModule;
+};
+```
+
+> NOTE: The examples above depend on each other. To have them compiled
+> the code should be slightly restructured. Inline implementation is
+> used only to have all parts of every class in a single place to
+> achieve a small piece of clarity.
+
+If `DynamicModuleSymbol` should be placed to a container like
+`std::set` the comparator is required. It is possible to write a set
+of comparison operators (less, less than, greater and greater than)
+but pointer to symbol in program doesn't have such semantics. So
+comparator should be implemented as separate friend class.
+
+## Conclusion
+
+The two ways of process-wide registration map implementation have its
+own pros and contras:
+
+* The constructor-based implementation suffers from order of
+  initialization issues and might hit threading issues during
+  constructor call.
+
+* The module enumeration version doesn't have issues with
+  initialization but requires proper handling shared object unload to
+  avoid dangling pointers.
+
+The implementation should be selected in accordance with task
+limitations.
