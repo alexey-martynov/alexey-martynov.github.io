@@ -23,7 +23,7 @@ This article continues
 Static linking leads to some interesting aspects:
 
 * Since all reusable parts of program are linked statically this
-  dramatically increases builds because every single binary, for
+  dramatically increases build size because every single binary, for
   example, main program and unit tests contain the same code.
 
 * This makes impossible to make small updates by replacing dynamic
@@ -36,16 +36,16 @@ Static linking leads to some interesting aspects:
 On other side not using dynamic libraries gives some
 benefits:
 
-* Additional work to maintain binary compatibility which is very
-  complex task for C++ programs is not required because everything is
+* No additional work required to maintain binary compatibility which
+  is very complex task for C++ programs because everything is
   integrated to single binary.
 
 * Dependency tracking is finished during the build process. No
   "missing library" and similar issues.
 
 When program is linked with dynamic libraries which should contribute
-to existing registration maps the task becomes complex because of way
-how dynamic libraries work on Linux platform.
+to existing registration maps the task becomes complex because of the
+way how dynamic libraries work on Linux platform.
 
 ## Dynamic Libraries on Linux system
 
@@ -63,10 +63,11 @@ them to linker command line to have linking finished successfully.
 The process of linking has one important caveat: the `LD` as linker is
 a single pass linker. This means that it pass over the libraries once
 and when it processes any library it drops all unreferenced symbols
-from it. So if next library requires symbol from current library it
-will not find it and linking is failed. Solution: sort libraries from
-most specific to generic, for example, the standard C library should
-be the last and the standard C++ library should be just before it.
+from it. If next library requires a symbol from the current library
+and it cannot find it, then the linking will fail. Solution: sort
+libraries from most specific to generic, for example, the standard C
+library should be the last and the standard C++ library should be just
+before it.
 
 The dynamic library named "Shared Object" on Linux platform is a
 partially linked program. All object files are linked together and
@@ -76,8 +77,8 @@ shared object or from static library. The reference to such shared
 objects will be added to header and this libraries will be
 automatically loaded.
 
-If dependency is a static library it will be linked to resulting
-shared library: all object files with referenced symbols will be added
+If dependency is a static library it is linked to resulting shared
+library: all object files with referenced symbols are be added
 to shared object and all other objects files are dropped. As the
 result:
 
@@ -92,55 +93,55 @@ program.
 
 On Linux platform all loaded into process libraries form a tree. To
 call any function or take value of variable its name (symbol) should
-be found. Without special steps the symbol searched by its name it a
+be found. Without special steps the symbol searched by its name in a
 tree using breadth first order.
 
-If more that library provides the same symbol the symbol from the very
-first shared object (breadth first) will be used by _all_ loaded
-shared objects including the main program. This makes safe? for
-example, passing pointers from `malloc()` between shared objects and
-`free()` them from another shared object.
+If more than one library provides the same symbol the symbol from the
+first shared object (breadth first) is used by _all_ loaded
+shared objects including the main program. This makes is safe to, for
+example, pass pointers from `malloc()` between shared objects and
+`free()` them in another shared object.
 
 Please note that Windows platform works in another way and all symbols
-from dynamic libraries are reference not only by its name but a
+from dynamic libraries are referenced not only by its name but by a
 library name too.
 
-The important aspect of this search that at runtime there no
-"duplicate symbols" issues. Symbol either exists in process or
-missing. If symbol is missing the program fails.
+The important aspect of this search is that there no "duplicate
+symbols" issues at runtime. Symbol either exists or missing. If symbol
+is missing the program fails.
 
 #### Weak and Strong Symbols
 
 By default all symbols are strong. This means that during linking all
-they references should be resolved to static or shared library. At
-runtime this symbols are always available and not null.
+they reference should be resolved to a static or a shared library. At
+runtime these symbols are always available and they are not null.
 
 The ELF format allows to specify additional attribute `weak` for every
-symbol to change behavior (use `__attribute__((weak))` in GCC):
+symbol to change its behavior (use `__attribute__((weak))` in GCC):
 
 * The weak symbols are not required. For example, declaring function
-  as weak makes possible to have empty (`nullptr`) address of it
+  as weak makes it possible to have empty (`nullptr`) address of it
   because it is missing in resulting binary.
 
   This technique is used to create hooks for library in client code so
-  do not foget to check that it is not `nullptr` before call.
+  do not forget to check that it is not `nullptr` before call.
 
-* The weak symbols may be encountered in symbol search during linking
-  multiple times even with strong symbol. When strong symbol
+* The weak symbols may be encountered in symbol search during link
+  process multiple times even with a strong symbol. When strong symbol
   encountered twice the error "duplicate symbol" issued. When multiple
   weak symbols encountered the first one is used. In case of multiple
-  weak symbols and single strong symbol the strong one wins and used
-  as the result.
+  weak symbols and single strong symbol the strong one wins and it is
+  used as the result.
 
   This technique is used to provide default implementations which are
   easy to override in client code.
 
 * During runtime the same symbol selection algorithm may be used but
-  on modern systems the `LD_DYNAMIC_WEAK=1` might set to environment
-  to have non-first strong symbol to win.
+  on modern systems the `LD_DYNAMIC_WEAK=1` might be set in the
+  environment to have non-first strong symbol to win.
 
   In addition to have the main binary symbol win the `-rdynamic`
-  parameter required when linking main binary. This will export
+  parameter is required when linking main binary. This will export
   symbols from it as for shared object and they will participate in
   symbol search and selection.
 
@@ -148,19 +149,19 @@ symbol to change behavior (use `__attribute__((weak))` in GCC):
 > symbols. This allows to merge same symbols from different object
 > files to a single one. But this process might be broken for `static`
 > methods of template classes. These methods will have internal
-> linkage so the can't be merged.
+> linkage so the they can't be merged.
 
 #### Overriding Symbols At Runtime
 
 The process of symbol search described above allows interesting
-technique of symbol interception. The variable `LD_PRELOAD` main
-contain names or paths of shared object to load first _before_
-program. Since they loaded before program they symbols win in symbol
-selection. This allows to substitute implementations.
+technique of symbol interception. The variable `LD_PRELOAD`
+contains names or paths of shared object to load first _before_
+program. Since they are loaded before program their symbols win in
+symbol selection. This allows to substitute implementations.
 
 Please take into consideration the following aspects:
 
-1. In general, all set of functions should be intercepted
+1. In general, the whole set of functions should be intercepted
    together. For example, if `malloc()` is intercepted the following
    function form _incomplete_ list should be intercepted too:
 
@@ -170,13 +171,14 @@ Please take into consideration the following aspects:
    * `reallocarray()`
    * `posix_memalign()`
 
-2. When interceptor should use default implementation it should be
-   found by calling `dlsym()` using `RTLD_NEXT` special
-   handle. Please look to `dlsym()` documentation for details.
+2. When interceptor requires access to the  default implementation
+   this implementation should be found by calling `dlsym()` using
+   `RTLD_NEXT` special handle. Please look to `dlsym()` documentation
+   for details.
 
 #### Symbol Visibility
 
-The C and C++ languages knows nothing about dynamic libraries. They
+The C and C++ languages know nothing about dynamic libraries. They
 have concepts of "internal" and "external" linkage and nothing
 more. The symbols with internal linkage are accessible inside the same
 translation unit and symbols with external linkage are accessible
@@ -184,7 +186,7 @@ everywhere.
 
 The C++ offers anonymous namespaces: symbols from anonymous namespace
 may have external linkage but they always has unique name for every
-translation unit so they don't clash. This requires because classes
+translation unit so they don't clash. This is required because classes
 can't have internal linkage.
 
 > NOTE: The free functions from anonymous namespaces receive internal
@@ -192,13 +194,13 @@ can't have internal linkage.
 
 > NOTE: The GDB might have issues during lookup of symbols (variables
 > or functions) in anonymous namespaces when current context is not
-> corresponding translation unit. For such cases use `static` instead
-> of anonymous namespace.
+> in the corresponding translation unit. For such cases use `static`
+> instead of anonymous namespace.
 
 When shared objects come into play it contribute additional concept:
 visibility.
 
-The interesting variants of visibility is `default` and `hidden`.
+The interesting variants of visibility are `default` and `hidden`.
 
 The `default` visibility means that symbol is visible to other shared
 objects. This is similar to external linkage.
@@ -242,10 +244,10 @@ this the following functions from `libdl` are used:
 
   Please note that `dlsym()` performs breadth first search in tree of
   shared objects so it is _possible_ to have valid pointer to symbol
-  which is not provided from shared object from the first
-  parameter. In such case symbol will be provided from the first
-  dependency of specified shared object. This is no obvious and
-  contradicts Windows platform behavior.
+  which is not provided by shared object from the first parameter. In
+  such case the symbol is be provided from dependency of specified
+  shared object. This dependency might be transitional. This is not
+  obvious and contradicts Windows platform behavior.
 
 ## Straightforward Processwide Registration Map
 
@@ -281,7 +283,7 @@ As the result the main trick to have a call to
 `registerModule()`. According to rules of symbol selection this will
 be the very first symbol in process regardless of amount of this
 symbols in shared objects. If access to registered modules information
-i placed to the same translation unit the neighbor function will
+is placed to the same translation unit the neighbor function will
 access shared data in registered modules list.
 
 The possible ways to have this call done upon module startup:
@@ -303,8 +305,8 @@ The possible ways to have this call done upon module startup:
 
   The linker allows to add attribute `constructor` (and `destructor`
   too) to any free function without parameters and without
-  result. This function will be called when shared object is
-  loaded. For example:
+  result. This function is called when shared object is loaded. For
+  example:
 
   ```c++
   __attribute__((constructor))
@@ -325,14 +327,14 @@ objects might not find module because it is not registered yet.
 
 ## Enumerating Shared Objects
 
-To avoid issue with order of initialization another solution
+To avoid issue with order of initialization another solution is
 required. The `dl_iterate_phdr()` can assist to solve the issue.
 
 This function allows to list all loaded shared objects including the
 main program. So it is possible to do the following steps to get
 complete registration map:
 
-1. Iterate shared objects.
+1. Iterate over list of loaded shared objects.
 2. For every shared object get handle to it.
 3. Look for specific symbol describing module in every shared object.
 4. If symbol is found take data and build registration map.
@@ -347,10 +349,10 @@ This looks like a simple task but some caveats may break the idea:
   `dlopen()` is a name or path of shared object to load. The `NULL`
   (`nullptr`) will return handle for the main program.
 
-* The returned handle should be released via `dlcose()` call.
+* The returned handle should be released via `dlclose()` call.
 
 * The symbol lookup is performed via `dlsym()` function. Since it
-  performs breadth fist search over dependency tree the received
+  performs breadth first search over dependency tree the received
   non-`NULL` addresses should be deduplicated, for example, placing
   them to a `std::set`. This makes impossible to tell which exact
   shared object contains symbol but usually this is not an issue.
@@ -377,7 +379,7 @@ This looks like a simple task but some caveats may break the idea:
   points to function or variable.
 
 Taking into account everything above the following function will
-iterate over all registration entries in running process:
+iterate over all registration entries in the running process:
 
 ```c++
 using module_list_t = std::set<const module_info_t *>
@@ -428,7 +430,7 @@ The loaded shared objects fall to one of the following categories:
   including transitive. Everything loaded via `LD_PRELOAD` placed to
   this category too.
 
-* Can be unloaded. All other shared objects loaded via `dlopen()` in
+* Can be unloaded. All other shared objects loaded via `dlopen()` are
   this category.
 
 Unloading shared object is a very dangerous operation since it
@@ -459,7 +461,7 @@ calling `dlopen()` again it is inefficient because:
 
 1. `dlopen()` not so fast because requires search.
 2. Requires to hold name of the shared object which is a string. In
-   general case it is a full path of the module.
+   general case it is a full path to the module.
 
 So it is more efficient to create a structure with 2 members: handle
 and reference count. Pointer to this structure will be shared between
@@ -599,8 +601,8 @@ private:
 ```
 
 The implementation of `DynamicSymbolModule` is a little bit tricky
-because it s convenient to behave as smart pointer when type of symbol
-is value and behave as function object when type of symbol is
+because it is convenient to behave as a smart pointer when type of symbol
+is value and behave as function object when type of symbol is a
 function. To achieve this the C++ Concepts can be used as requirement
 for members:
 
@@ -686,7 +688,8 @@ public:
 
   template <typename... Args>
   requires std::invocable<T, Args...>
-  std::invoke_result_t<T, Args...> operator()(Args&& ... args) noexcept(std::is_nothrow_invocable_v<T, Args...>)
+  std::invoke_result_t<T, Args...> operator()(Args&& ... args)
+      noexcept(std::is_nothrow_invocable_v<T, Args...>)
   {
     return (*ptr_)(std::forward<Args...>(args)...);
   }
