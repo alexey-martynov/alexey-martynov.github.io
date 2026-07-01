@@ -565,7 +565,7 @@ public:
       throw std::runtime_error{"Lookup for symbol without shared object is forbidden"};
     }
 
-    return DynamicModuleSymbol<T>{handle_, static_cast<T*>(dlsym(handle_->handle, name))};
+    return DynamicModuleSymbol<T>{handle_, reinterpret_cast<T*>(dlsym(handle_->handle, name))};
   }
 
   template <typename T>
