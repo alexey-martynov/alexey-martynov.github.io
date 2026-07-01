@@ -4,14 +4,15 @@ title: Registration Maps in C++
 permalink: /posts/c++-registration-maps.html
 ---
 
+{% assign previous_post = site.posts | where: "url", "/posts/c++-static-initialization.html" | first %}
 Object maps is a construct which hits initialization order issues very
-often.For example, if module is a COM server it must implement the
+often. For example, if module is a COM server it must implement the
 single entry point which must be able to create and return objects by
 their identifiers. Experienced developer who is familiar with design
 pattern knows pattern "Factory".
 
-This article continues [C++
-Initialization](/posts/c++-static-initialization.html).
+This article continues
+[{{previous_post.title}}]({{previous_post.url}}).
 
 ## Table of Contents
 {:.no_toc}

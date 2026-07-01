@@ -4,6 +4,7 @@ title: About Static Initialization in C++
 permalink: /posts/c++-static-initialization.html
 ---
 
+{% assign next_post = site.posts | where: "url", "/posts/c++-registration-maps.html" | first %}
 Initialization of a C++ program might be very tricky due to amount of
 facilities involved in the process. The possible pitfall and solutions
 discussed here.
@@ -18,7 +19,7 @@ wanted to have a single instance of an object in his program. We will
 name this object as `Facility` during this story.
 
 His experience said:
-  
+
 ---&nbsp;Your implementation of the `Facility` is very complex. You are
 using a lot of external stuff, a lot of helpers which are specific to
 the `Facility`. Why don't try to hide them?
@@ -144,7 +145,7 @@ aspects that control the order of initialization might be:
 
 * An order in which individual translation units are passed to the
   linker.
-  
+
 * Compile- and link-time optimizations.
 
 * Versions of the compiler and linker.
@@ -218,7 +219,7 @@ return reference to local static variable:
 ```diff
 - static std::unique_ptr<FacilityImpl> instance;
 - static boost::once instance_once = BOOST_ONCE_INIT;
-- 
+-
 - static void createFacility()
 - {
 -   instance.reset(new FacilityImpl);
@@ -245,7 +246,7 @@ Unfortunately this solution is slow because every time when
 
 4. In case of exception during construction release lock and propagate
    exception to the caller.
-   
+
 5. Mark object as created.
 
 6. Release lock.
@@ -263,14 +264,14 @@ More important that this solution has the same issue as previous one with
 ```diff
 - static std::unique_ptr<FacilityImpl> instance;
 - static boost::once instance_once = BOOST_ONCE_INIT;
-- 
+-
 - static void createFacility()
 - {
 - 	instance.reset(new FacilityImpl);
 - }
 + static FacilityImpl * instance = nullptr;
 + static init init_count = 0;
- 
+
   Facility & Facility::getInstance()
   {
 -   boost::call_once(&createFacility, instance_once);
@@ -313,7 +314,7 @@ multiple calls to the initialization function. In the worst case
 client can call it before every operation with corresponding component.
 The [Schwartz/Nifty
 Counter](https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Nifty_Counter)
-can assist in such initialization and deinitialization. 
+can assist in such initialization and deinitialization.
 
 ## Conclusion
 
@@ -327,6 +328,6 @@ Injection](https://en.wikipedia.org/wiki/Dependency_injection) solves
 all issues with dependencies. But it might be tedious to provide
 global dependencies like logger via Dependency Injection.
 
-In the [C++ Registration Maps](/posts/c++-registration-maps.html) I'll
+In the [{{next_post.title}}]({{next_post.url}}) I'll
 continue to explore possible ways to make safe namespace scope object
 initialization.
