@@ -34,7 +34,7 @@ XeLaTeX unless compatibility issues explicitly stated.
 
 ## A Document Set Example
 
-Lets take as example an university course. The good university might
+Lets take as example an university course. The good course might
 have a set of related documents aside from bureaucratic requirements:
 
 * A textbook which contains all information in course. It may contain
@@ -60,41 +60,42 @@ have a set of related documents aside from bureaucratic requirements:
   every teacher follows the same rules when checking solutions.
 
 * Supplemental materials like coding guidelines, how to interact with
-  CI pipeline and so on.
+  [CI](https://en.wikipedia.org/wiki/Continuous_integration) pipeline
+  and so on.
 
 This set of documents has a lot of cross-references and shared
 materials:
 
-* The class diagrams, for example, need to be included to textbook,
-  presentation and corresponding handout. They should be updated in
-  all places simultaneously.
+* The class diagrams, for example, should be to be included to the
+  textbook, presentation and corresponding handout. They should be
+  updated in all these places simultaneously.
 
-* The sample program sources shared between these documents too but
-  they places additional requirement: they should be able to run and
-  show designed behavior.
+* The sample program sources are shared between these documents too
+  but they place additional requirement: they should be able to run
+  and show required behavior.
 
-* A guidance on task solutions needs to refer various places in
-  textbook to connect aspects of task implementation with concepts
+* The guidance on task solutions needs to refer various places in
+  textbook to connect aspects of the task implementation with concepts
   from lectures.
 
-* A textbook needs a bibliography. The textbook might refer specific
+* The textbook needs a bibliography. The textbook might refer specific
   places in other books allowing students to find detailed
   information. This bibliography should be maintained according this
   references.
 
-* A good textbook has index allowing fast search of all concepts end
-  entities used in course. For example, index might contain all
+* A good textbook has index allowing fast search of all concepts and
+  entities used in the course. For example, index might contain all
   functions, classes, types, constants, modules/header files referred
-  in text.
+  in the text.
 
-And another aspect should be mentioned explicitly: this set of
+Another aspect should be mentioned explicitly: this set of
 documents evolve over the time. The mistakes are fixed, new
 information is added, deprecated stuff is removed.
 
-As the result of requirements above a generic office suite can not
+As the result of the requirements above a generic office suite can not
 handle such document sets effectively. Everything is broken from the
 start: to track changes it is wise to place documents under source
-control. But these documents represented as binary files and
+control but these documents represented as binary files and
 generating difference between revisions is hard.
 
 Additional tasks for such textbooks are formulas and code
@@ -117,6 +118,10 @@ breaks some important principles:
   example, mentioning C++ header name in text is done by applying
   monospace font instead of creation of style "C++ Header" and
   application of that style.
+
+Please note that this doesn't mean "every document produced by office
+suite". It is _possible_ to create styles in document and apply them
+but in my experience most of such documents don't have them.
 
 ## Base Usage Of LaTeX
 
@@ -146,9 +151,9 @@ names might have monospace font to differentiate them from
 text. Function names often have parenthesises after name in case of C
 or C++.
 
-The straight forward approach is using `\texttt` and similar commands
+The straightforward approach is using `\texttt` and similar commands
 to format them. But this leads to very low level formatting and makes
-any changes chard because different entities use the same command.
+any changes hard because different entities use the same command.
 
 The proper way is use semantic markup: for every entity should be its
 own command to insert it. For example, preamble might contain some
@@ -195,7 +200,7 @@ To generate index the following steps required:
    ```
 
    The `\phantomsection` generates proper page number when added to
-   table of content with `\addtocontentsline`.
+   table of contents with `\addtocontentsline`.
 5. Process extracted index information with `makeindex` command.
 6. Make additional run of LaTeX to include generated index.
 
@@ -216,10 +221,11 @@ To do this the `\Function` command can be extended:
 \WithSuffix\newcommand{\Function*}{1}{\texttt{#1()}}
 ```
 
-To sort properly and keep formatting the `@` symbol is used in index
-entry: left side is used to sort and right side to show name. The
-command `\Function*` is added to insert function name without updating
-index. This might be required to refer to private sample function.
+To sort item properly and keep formatting the `@` symbol is used in
+index entry: the left side is used to sort and the right side to show
+name. The command `\Function*` is added to insert function name
+without updating the index. This might be required to refer to a
+private sample function.
 
 Performing such task for every semantic object builds correct index.
 
@@ -245,12 +251,12 @@ category:
 \WithSuffix\newcommand\CxxSymbol*[1]{\texttt{#1}}
 ```
 
-Two versions created again: one to add value to index and starred to
-skip index update.
+Two versions created again: one to add value to the index and starred
+version to skip the index update.
 
 The C and C++ constants contain underscores very often. To avoid
-broken format additional function can be used to replace them in
-formatting part of commands.
+broken formatting in resulting document an additional function can be
+used to replace underscores in the formatting part of commands.
 
 ### A Special Case: UML
 
@@ -264,8 +270,8 @@ document this approach hits some limitations:
 
 But LaTeX can draw diagrams for you. The library
 [TikZ](https://tikz.dev/) is very good in drawing pictures. All that
-left is to make special UML commands to draw entities and relations
-between them.
+left to author is to make special UML commands to draw entities and
+relations between them.
 
 The nice library
 [TikZ-UML](https://perso.ensta-paris.fr/~kielbasi/tikzuml/) done this
@@ -295,7 +301,8 @@ features.
 
 The Beamer allows to write document and render it in different modes:
 *presentation*, *article* and *handout*. Personally I don't use
-*article* mode because I want to have a book-like document.
+*article* mode because I want to have a book-like document and it is
+much easier to create in with `book` class.
 
 ### Themes
 
@@ -303,35 +310,35 @@ The Beamer comes with theme support and extensive theme list. Themes
 allow to change every single aspect of presentation, for example, how
 to titles shown, where to put logo and so on.
 
-The default themes is good enough but your company has its own brand
-book dictating how all such things must look. So you apply brand book
-in 3 ways:
+The default themes are good enough but your company has its own brand
+book dictating how all such things must look. So author can apply
+brand book in 3 ways:
 
-* creating a new [class](#classes-and-packages) on top of `beamer`,
-* creating a new [package](#classes-and-packages) or
-* creating a new theme.
+1. by creating a new [class](#classes-and-packages) on top of `beamer`,
+2. by creating a new [package](#classes-and-packages) or
+3. by creating a new theme.
 
-Without diving to details the proper way is creating a theme. The
+Without diving to details the proper way is creating a theme. The theme
 allows simple switch of presentation style by using command
 `\usetheme{THEME}` in the preamble. When you work on presentation with
 people outside your organization who lacks access to fonts, icons and
-so on this gives ability to use optional theme:
+so on this gives ability to use an optional theme:
 
 ```latex
 \IfFileExists{beamerthemeAcme.sty}{\usetheme{Acme}}{\usetheme{DEFAULT-LOOKS-LIKE}}
 ```
 
-The front and last page of corporate presentations are complex very
-often. The use background images and specially placed fields. These
-pages can be created as [TikZ](https://tikz.dev/) picture which allows
-precise placement of nodes with text. The following aspects should be
-took in consideration:
+The front and the last page of corporate presentations are complex by
+its nature. They use background images and specially placed
+fields. These pages can be created as [TikZ](https://tikz.dev/)
+picture which allows precise placement of nodes with text. The
+following aspects should be took in consideration:
 
-* The Beamer frame sizes and they don't match corporate styles. All
-  placements, font sizes and scales should be transferred from
-  corporate coordinates to Beamer coordinates. It is possible to
-  perform this task automatically via Pgf but if corporate style
-  doesn't change very often it is much easier to use calculator.
+* The Beamer frame sizes might not match corporate style's frame
+  size. All placements, font sizes and scales should be transferred
+  from corporate coordinates to Beamer coordinates. It is possible to
+  perform this task automatically via Pgf but in case when corporate
+  style doesn't change very often it is much easier to use calculator.
 
 * The baseline skip for fonts should be carefully calculated because
   simple rules might not work with designer's vision.
@@ -408,8 +415,9 @@ textbook includes command
 \InsertChapter{ResourceManagement}{Resource Management}{resource-mangement}
 ```
 
-The book will be compiled with (for convenience a label for chapter is
-added automatically to make cross-references in the text book)
+The book will be compiled with (for convenience a `\label` for the
+chapter is added automatically to make cross-references in the text
+book):
 
 ```latex
 \chapter{Resource Management}
@@ -435,7 +443,7 @@ And presentation can define its title like:
 ### Reusing Figures and Tables
 
 As mentioned [above](#organizing-document) the figures and tables
-should be included from separated files as is with captions, labels
+should be included from separate files as is with captions, labels
 and so on. This leads to the following issues:
 
 * Captions aren't needed in presentations in general case. So they can
@@ -447,31 +455,31 @@ and so on. This leads to the following issues:
   ```
 
 * Figures and tables might not fit the slide. This requires careful
-  formatting to achieve proper look in textbook and presentation.
+  formatting to achieve proper look in the textbook and the
+  presentation.
 
-* When figures and tables in presentation should be shown
-  progressively (Beamer has word "overlay" for this) this feature
-  collides with textbook: to construct overlays Beamer uses "overlay
-  spec" (in angle brackets) and special commands like `\pause`,
-  `\only<>` and so on. To handle this in texbook such commands should
-  be defined as doing nothing. This effectively produces final
-  figure. But overlay spec is much harder to handle so it just can be
-  avoided.
+* When figures and tables inserted into the presentation which should
+  be shown progressively (Beamer has word "overlay" for this) this
+  feature collides with textbook: to construct overlays Beamer uses
+  "overlay spec" (in angle brackets) and special commands like
+  `\pause`, `\only<>` and so on. To handle this in texbook such
+  commands should be defined as doing nothing. This effectively
+  produces final figure. But overlay spec is much harder to handle so
+  it just can be avoided.
 
 ### Handouts
 
 The biggest underestimated feature of presentation programs is Presenter
-Notes. The presentation is not a textbook and is not an
-article. Placing too much text to it makes a "slidument" instead of
-presentation. A good presentation only has illustrative material and
-absolutely required definitions because presentation is created to
-assist speaker.
+Notes. The presentation is not a textbook and not an article. Placing
+too much text to it makes a "slidument" instead of presentation. A
+good presentation only has illustrative material and absolutely
+required definitions because presentation is created to assist speaker.
 
-In such case it is relatively easy to forget to speak about some
+In such case it is relatively easy to forget to talk about some
 important aspects and corner cases especially when talking about
 presentation's topic once a year. Presenter notes allow to inform
 speaker about such things. The PowerPoint has this, Apple Keynote has
-this and Beamer offer's this.
+this and Beamer offers this.
 
 The notes are inserted to slide via `\note{text}` command. To turn on
 presenter notes the commands
@@ -485,7 +493,7 @@ should be added to preamble. This by default render every page split
 in two parts:
 
 1. Left is a slide.
-2. Right is a presenter screen, showing note, section, title, subtitle
+2. Right is a presenter screen showing note, section, title, subtitle
    and miniature of slide.
 
 The special program like
@@ -514,14 +522,14 @@ affects presentation: the content of `\only` doesn't occupy space on
 frames not matched overlay specification but content of `\onslide`
 does. This allows to create stack of pictures, for example, when every
 level of stack has its own frame. In book all these pictures will be
-placed one under/aside other. And handout produces the same. This may
-lead to vertical or horizontal overflow and clipping.
+placed one under/aside other. This may lead to vertical or horizontal
+overflow and clipping.
 
 The better result can be achieved by:
 
 * splitting big content to parts;
 * placing every part to individual presentation frame manually;
-* collect parts to single figure in book.
+* collecting parts to single figure in book.
 
 ## Integrating Sample Code
 
@@ -643,7 +651,7 @@ Additional small notes about listings in presentations:
   grow from frame to frame along with uncovering additional lines. An
   extra markup required to get full size block from the beginning.
 
-* Sometime listing in presentation omits some irrelevant fragment. The
+* Sometimes listing in presentation omits some irrelevant fragment. The
   ellipsis can be inserted via `escapeinside` and `\ldots`. The small
   bonus: this ellipsis visually differs from three points used as
   syntactic construction in C and C++.
@@ -688,7 +696,7 @@ int main()
 
 ## Version Control
 
-The whole materials (texbook, presentations and so on) evolves over
+When the whole materials (texbook, presentations and so on) evolve over
 the time the users should have ability to track changes. The simplest
 way is to put all sources under version control system like
 [Git](https://git-scm.org).
@@ -730,7 +738,7 @@ number text.
 
 ## Making Stuff Reusable
 
-All this stuff should be placed somewhere. When a single and unique
+All these stuff should be placed somewhere. When a single and unique
 document created the possible place is preamble of the document. When
 set of documents created this approach ineffective.
 
@@ -763,7 +771,7 @@ following way:
 The company style guide often refers to custom fonts. Historically
 LaTeX handles fonts via METAFONT system. Fonts from METAFONT give nice
 results but most of modern fonts are in OpenType, TrueType or
-Adobe Type1 formats. The classic PDF LaTeX unable to handles these
+Adobe Type1 formats. The classic PDF LaTeX unable to handle these
 types.
 
 To use such fonts switch to XeLaTeX required. XeLaTeX has native
@@ -777,7 +785,7 @@ The first approach is good enough for one time documents. If document
 is maintained by many people on different systems the maintaining up
 to date font set becomes hard.
 
-The better way is placing fonts into version control along with
+The better way is placing fonts under version control along with
 packages from previous section and referring them by file names.
 
 To use fonts in document the `fontspec` package should be loaded. For
@@ -818,7 +826,7 @@ different metrics can lead to another overflows and underflows.
 
 ### TeX Directory Structure
 
-The simple way to places all classes, packages and other assets like
+The simple way to place all classes, packages and other assets like
 fonts and images is creation of subdirectory, for example, `tex` and
 place all stuff there. The path to directory must be added to
 environment variable `TEXINPUTS` to make them available to XeLaTeX.
@@ -865,10 +873,13 @@ to repository should be added to "TEXMF root directories" list on
 
 The great LaTeX system allows to make perfect documents and
 presentations. But creation of maintainable set of documents requires
-and extra attention and some diligence. Personally I've found that
+an extra attention and some diligence. Personally I've found that
 recommendations above dramatically simplifies this work.
 
 ## Changelog
+
+5 August 2026
+: Fix typos
 
 4 October 2024
 : Added:
