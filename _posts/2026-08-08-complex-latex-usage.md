@@ -282,6 +282,10 @@ work almost ideally. The following issues exist:
 * Some issues with sloped relation stereotypes (attribute is not
   supported).
 * Beamer overlays might work incorrectly (see below).
+* Be careful with node identifiers. Although they aren't shown they
+  can contribute to node size: the long identifier for node with
+  short name can create huge box. The `\umlbasicstate` is known command
+  with this behavior.
 
 ## Presentations and Handouts
 
@@ -329,7 +333,7 @@ so on this gives ability to use an optional theme:
 ```
 
 The front and the last page of corporate presentations are complex by
-its nature. They use background images and specially placed
+their nature. They use background images and specially placed
 fields. These pages can be created as [TikZ](https://tikz.dev/)
 picture which allows precise placement of nodes with text. The
 following aspects should be took in consideration:
@@ -458,11 +462,11 @@ and so on. This leads to the following issues:
   formatting to achieve proper look in the textbook and the
   presentation.
 
-* When figures and tables inserted into the presentation which should
+* When figures and tables inserted into the presentation need to be
   be shown progressively (Beamer has word "overlay" for this) this
   feature collides with textbook: to construct overlays Beamer uses
   "overlay spec" (in angle brackets) and special commands like
-  `\pause`, `\only<>` and so on. To handle this in texbook such
+  `\pause`, `\only<>` and so on. To handle this in textbook such
   commands should be defined as doing nothing. This effectively
   produces final figure. But overlay spec is much harder to handle so
   it just can be avoided.
@@ -485,7 +489,6 @@ The notes are inserted to slide via `\note{text}` command. To turn on
 presenter notes the commands
 
 ```latex
-\setbeameroption{show notes}
 \setbeameroption{show notes on second screen}
 ```
 
@@ -497,9 +500,23 @@ in two parts:
    and miniature of slide.
 
 The special program like
-[SplitShow](https://github.com/mpflanzer/splitshow/) or [Dual-Screen
-PDF Viewer](https://dspdfviewer.danny-edel.de) can split such
-page and show slide on one monitor and presenter screen on another.
+[SplitShow](https://github.com/mpflanzer/splitshow/), [Dual-Screen
+PDF Viewer](https://dspdfviewer.danny-edel.de) or
+[pdfpc](https://pdfpc.github.io/) can split such page and show slide
+on one monitor and presenter screen on another.
+
+> NOTE: The XeTeX has issue with text on slides with notes: the
+> foreground color of the content is matched with background color. To
+> fix this the simplest way is resetting font at the beginning of
+> every list. This can by achieved by inserting to preamble:
+> ```latex
+> \makeatletter
+> \def\beamer@framenotesbegin{\usebeamercolor[fg]{normal text}%
+>   \gdef\beamer@noteitems{}%
+>   \gdef\beamer@notes{}%
+> }
+> \makeatother
+> ```
 
 Some samples are to complex to copy their contents from projected
 presentation: this takes time and introduces mistakes. Tables and
@@ -877,6 +894,11 @@ an extra attention and some diligence. Personally I've found that
 recommendations above dramatically simplifies this work.
 
 ## Changelog
+
+8 August 2026
+: Add:
+    * Information about node size issue in TikZ=UML.
+    * A note about slide font colors with XeTeX.
 
 5 August 2026
 : Fix typos
