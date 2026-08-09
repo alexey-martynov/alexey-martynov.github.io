@@ -88,6 +88,10 @@ materials:
   functions, classes, types, constants, modules/header files referred
   in the text.
 
+So these set of documents gives the following process:
+
+![LaTeX Processing](/assets/images/latex-process.svg)
+
 Another aspect should be mentioned explicitly: this set of
 documents evolve over the time. The mistakes are fixed, new
 information is added, deprecated stuff is removed.
@@ -470,6 +474,57 @@ and so on. This leads to the following issues:
   commands should be defined as doing nothing. This effectively
   produces final figure. But overlay spec is much harder to handle so
   it just can be avoided.
+
+#### Generating SVG
+
+The presentations, articles and books are done in PDF format. This
+gives exactly same representation on any device. But sometimes figures
+should be included into Web document. Browsers may render PNG, JPEG or
+SVG inline. PNG and JPEG are raster formats so they scale badly. SVG
+is vector format and TikZ output can be done in SVG with small
+efforts. The process is documented in [PGF/TikZ
+Manual](https://tikz.dev/drivers#sec-10.2.4) and below is short
+excerpt:
+
+1. Create a minimal document with `dvisvgm` driver and save it as
+   `figure.tex`:
+
+   ```latex
+   \documentclass[dvisvgm]{minimal}
+
+   \usepackage{tikz}
+
+   \begin{document}
+   \end{document}
+   ```
+
+2. Insert figure definition into `document` environment.
+
+3. Generate DVI:
+
+   ```
+   latex figure.tex
+   ```
+
+4. Generate SVG:
+
+   ```
+   dvisvgm figure.tex
+   ```
+
+Please note that the resulting `figure.svg` might be different from
+PDF version. I found that:
+
+1. Some letters clash in SVG. Usually this means that single string is
+   split to two or more `tspan`s with shifted positions. This fix
+   this just remove extra `tspan`s from document.
+
+2. Some nodes might be positioned differently. This can be adjusted
+   manually or by vector graphics editor.
+
+Regardless of issues above this process saves time from repeating
+figure in vector graphics editor. The picture in this article is
+generated according to steps above.
 
 ### Handouts
 
@@ -894,6 +949,10 @@ an extra attention and some diligence. Personally I've found that
 recommendations above dramatically simplifies this work.
 
 ## Changelog
+
+9 August 2026
+: Added overall process figure and section about TikZ-to-SVG
+  conversion.
 
 8 August 2026
 : Add:
