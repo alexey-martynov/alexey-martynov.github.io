@@ -1064,7 +1064,6 @@ recommendations above dramatically simplifies this work.
 
 ## Changelog
 
-=======
 18 August 2026
 : * Add information about Beamer customizations.
   * Add hints about bibliographies in Beamer.
