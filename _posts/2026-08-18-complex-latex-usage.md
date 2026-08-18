@@ -358,9 +358,88 @@ following aspects should be took in consideration:
   but usually background is result of complex blending, shadows,
   gradients and so on and as the result vector image is not available.
 
-* The extra attention should payed to versions of background
+* The extra attention should be paid to versions of background
   images. The first and the last slide might differ in tiny
   details. The backgrounds may evolve over the time.
+
+### Customizing Elements
+
+In case of corporate presentation the brand book dictates how various
+stuff should look. This includes [fonts](#a-word-about-fonts), colors,
+various graphics including logo. The title frame almost always doesn't
+match any existing theme because designer tries to make it
+recognizable. As the result presentation requires additional efforts.
+
+Lets take title page as example of possible ways of
+customization. When title page needs to be changed the following
+options exists:
+
+1. Just make regular frame and insert content inside. Taking this idea
+   up to limit gives "just insert picture taken from Power
+   Point". The picture version is ineffective because it doesn't use
+   standard attributes of document: title, author names, date and so
+   on. In general this works when only 1 presentation is
+   required. Making set of presentations requires another solution.
+
+2. Redefine `\maketitle` to provide new content. This allows title
+   page to be reused as part of Beamer theme. But overriding
+   `\maketitle` requires duplication of its behavior: this command can
+   be used inside frame or outside frame. In latter case it adds frame
+   automatically. This behavior is given by Beamer.
+
+3. Redefine `\titlepage`. This command is used by `\maketitle` to
+   create contents of title frame. This is much easier than redefining
+   `\maketitle` since `\titlepage` can be used only inside frame.
+
+4. The solutions above ignore Beamer way to customize things. To
+   utilize Beamer facilities the template `title page` should be
+   updated.
+
+To change Beamer template the following ways available (please look
+more details of commands below in the Beamer documentation):
+
+1. `\setbeamertemplate{title page}{<content>}` changes title page to
+   `<content>`.
+
+2. `\defbeamertemplate*{title page}{<name>}{<content>}` makes named
+   (with `<name>`) template and sets is as current. This allows to
+   quick switch template with short command. For example,
+   `\setbeamertemplate{title page}[default]` selects default template
+   and `\setbeamertemplate{title page}[<name>]` selects the new
+   one. It is possible to pass additional parameters to template so
+   look for details in documentation.
+
+   Although it looks like overkill for title frame for other aspects
+   this might be more efficient. For example, templates for itemizing
+   elements can be switched easily.
+
+   In case when main title frame design leads to ugly word wrapping,
+   for example, in presentation's title designers can offer "back up
+   design" with another layout. In this case using
+   `\defbeamertemplate` allows to define both cases, select main
+   design as default and give ability to switch title page design to
+   back up version in selected presentations.
+
+The simple title page can be created using `\vskip` and
+`beamercolorbox` but corporate design might require exact positioning
+over background image. In this case TikZ picture can be created with
+precise text node placement. Please note that this will require
+
+```latex
+\begin{tikzpicture}[remember picture,overlay]
+  …
+\end{tikzpictire}
+```
+
+to achieve proper placement and at least 2 LaTeX runs to get final result.
+
+During template creation other templates should be used as much as
+possible because it gives ability to tune various things up. To select
+styles from template `\usebeamerfont` and
+`\usebeamercolor` insert required formatting. The `\usebeamertemplate`
+inserts template text. In case of TikZ-based title page applying
+templates for title, author, date and so on might be tricky so they
+can be avoided by placing text directly to node.
 
 ### Presentation Titles and Textbook
 
@@ -602,6 +681,41 @@ The better result can be achieved by:
 * splitting big content to parts;
 * placing every part to individual presentation frame manually;
 * collecting parts to single figure in book.
+
+### Bibliographies
+
+In any university course bibliography is very important part: it gives
+source for additional information. Creating bibliography in book or
+article is simple and straightforward:
+
+1. Information about sources is collected in `bib` files. Some
+   information can be found in Internet, for example, ANSI and ISO
+   standards collections.
+
+2. The sources are referenced via `\cite{item}` or
+   `\cite[text]{item}`. The former inserts reference to source and the
+   latter allows to refer exact element of source (table, figure,
+   source code or page).
+
+3. The resulting bibliography is inserted via `\printbibliography`
+
+> NOTE: do not forget that bibliography requires additional
+> translation to get all references right. This behavior is same as
+> index.
+
+In presentations this a little bit tricky. Since reference to source
+is not required on visible frame the citation might be placed to
+notes. Unfortunately this immediately makes empty bibliography in
+handout mode since notes are removed.
+
+The solution is placing `\nocite{item}` command on visible
+frame. Output of this command doesn't occupy space since it completely
+empty. The source item is properly referenced and inserted to
+bibliography. Such `\nocite` commands might be placed to title frame
+referencing all required items or in case of frequently changing
+presentation to corresponding frames. It is still possible to insert
+`\cite` to notes to have speaker visible references to books if this
+required.
 
 ## Integrating Sample Code
 
@@ -950,13 +1064,18 @@ recommendations above dramatically simplifies this work.
 
 ## Changelog
 
+=======
+18 August 2026
+: * Add information about Beamer customizations.
+  * Add hints about bibliographies in Beamer.
+
 9 August 2026
 : Added overall process figure and section about TikZ-to-SVG
   conversion.
 
 8 August 2026
 : Add:
-    * Information about node size issue in TikZ=UML.
+    * Information about node size issue in TikZ-UML.
     * A note about slide font colors with XeTeX.
 
 5 August 2026
@@ -965,10 +1084,8 @@ recommendations above dramatically simplifies this work.
 4 October 2024
 : Added:
     * A note.
-
     * List of "listings" package issues with ranges and line
       numbering.
-
     * Way of handling `\only` and `\onslide` effects.
 
 24 September 2024
