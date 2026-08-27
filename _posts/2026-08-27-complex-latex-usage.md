@@ -527,6 +527,33 @@ And presentation can define its title like:
 \title{\ChapterTitleResourceManagement}
 ```
 
+It is possible to go further. The current solution makes automation
+around title frames hard. For example, it is convenient to have
+*current* chapter concept. To achieve this additional command is
+required:
+
+```latex
+\ProvideDocumentCommand{\SelectChapter}{m}{
+  \def\CurrentChapterName{\csname ChapterName#1\endcsname}
+  \def\CurrentChapterIndex{\csname ChapterIndex#1\endcsname}
+  \def\CurrentChapterTitle{\csname ChapterTitle#1\endcsname}
+}
+```
+
+> NOTE: `\SelectChapter` is implemented with new facilities for
+> commands: `NewDocumentCommand`, `RenewDocumentCommand`,
+> `ProvideDocumentCommand`  and `DeclareDocumentCommand` available in
+> modern LaTeX2e implementations. For more details take a look at
+> [documentation](https://texdoc.org/serve/usrguide/0).
+
+The `\SelectChapter{<id>}` makes chapter with `id` "current" by
+setting 3 macros. According to example above, the call to
+`\SelectChapter{resource-management}` will set `\CurrentChapterName`
+to "Resource Management", the `\CurrentChapterIndex` to 10 and the
+`\CurrentChapterTitle` to `10. Resource Management`. This allows to
+refer to the current chapter without specific knowledge about
+identifier reducing amount of information to pass around.
+
 ### Reusing Figures and Tables
 
 As mentioned [above](#organizing-document) the figures and tables
@@ -1063,6 +1090,10 @@ an extra attention and some diligence. Personally I've found that
 recommendations above dramatically simplifies this work.
 
 ## Changelog
+
+27 August 2026
+: Add helper command to provide generic access to chapter
+  metainformation..
 
 18 August 2026
 : * Add information about Beamer customizations.
