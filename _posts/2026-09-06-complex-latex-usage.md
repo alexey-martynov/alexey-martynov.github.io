@@ -669,7 +669,7 @@ on one monitor and presenter screen on another.
 > NOTE: The XeTeX has issue with text on slides with notes: the
 > foreground color of the content is matched with background color. To
 > fix this the simplest way is resetting font at the beginning of
-> every list. This can by achieved by inserting to preamble:
+> every frame. This can by achieved by inserting to preamble:
 > ```latex
 > \makeatletter
 > \def\beamer@framenotesbegin{\usebeamercolor[fg]{normal text}%
@@ -679,7 +679,7 @@ on one monitor and presenter screen on another.
 > \makeatother
 > ```
 
-Some samples are to complex to copy their contents from projected
+Some samples are too complex to copy their contents from projected
 presentation: this takes time and introduces mistakes. Tables and
 diagrams in the same category because reproducing them in student's
 notes takes time. The Beamer offers a solution for this: generating
