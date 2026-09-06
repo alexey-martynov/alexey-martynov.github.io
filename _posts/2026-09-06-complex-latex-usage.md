@@ -291,7 +291,7 @@ work almost ideally. The following issues exist:
   short name can create huge box. The `\umlbasicstate` is known command
   with this behavior.
 
-## Presentations and Handouts
+## Presentations And Handouts
 
 The `beamer` document class allows to make nice presentations in
 LaTeX. Powered by packages it adds some facilities to make life
@@ -441,7 +441,7 @@ inserts template text. In case of TikZ-based title page applying
 templates for title, author, date and so on might be tricky so they
 can be avoided by placing text directly to node.
 
-### Presentation Titles and Textbook
+### Presentation Titles And Textbook
 
 When a set of textbook and presentations is prepared the presentation
 title might follow chapter title possibly including chapter
@@ -554,7 +554,7 @@ to "Resource Management", the `\CurrentChapterIndex` to 10 and the
 refer to the current chapter without specific knowledge about
 identifier reducing amount of information to pass around.
 
-### Reusing Figures and Tables
+### Reusing Figures And Tables
 
 As mentioned [above](#organizing-document) the figures and tables
 should be included from separate files as is with captions, labels
@@ -693,7 +693,13 @@ document rendered in special mode `handout`:
 The resulting PDF can be given to students to reduce amount of their
 work.
 
-### Issues with overlays
+Since `handout` is a class option this requires to update source file
+to have this option included into `\documentclass` statement. Please
+take a look at [Passing Document Class
+Options](#passing-document-class-options) on how to avoid changing
+source files.
+
+### Issues With overlays
 
 The important difference between `\only` and `\onslide` greatly
 affects presentation: the content of `\only` doesn't occupy space on
@@ -979,6 +985,146 @@ following way:
   hard. I would suggest to create class as the very last resort. The
   package might be created instead.
 
+### Parameters Of Custom Classes
+
+The custom class usually will rely on some other class because this
+dramatically reduces efforts on writing. So it will load other class
+via `\LoadClass` command. For example:
+
+```latex
+\NeedsTeXFormat{LaTeX2e}[2023-11-01[
+\ProvidesClass{augmented-book}[2026-09-06 Augmented book]
+
+% Preparations
+
+\LoadClass{book}
+
+% More definitions
+```
+
+Such definition creates a class without any parameter. To change its
+behavior the parameter should be added. The modern way is usage of
+`\DeclareKeys`. The complete reference can be found in LaTeX
+collection of documentation. The most interesting aspect is how to
+make created class transparent on underlying class options.
+
+Since it is hard and error prone to duplicate all parameter
+definitions from underlying class the new class should pass unknown
+parameters to underlying class. This can be achieved with the
+following code:
+
+```latex
+\DeclareKeys[AugmentedBook]{
+  parameter.if = \if@AB@parameter,
+}
+\DeclareUnknownKeyHandler[AugmentedBook]{
+  \PassOptionsToClass{\CurrentOption}{book}
+}
+\ProcessKeyOptions[AugmentedBook]
+
+\LoadClass[10pt[{book}
+```
+
+The code above declares a parameter `parameter` for `augmented-book`
+class. Its declaration creates a switch which can be used like `\if`
+without condition.
+
+The `\DeclareUnknownKeyHandler` just pass current option value as is
+to `book` class.
+
+The `\ProcessKeyOptions` triggers processing.
+
+So when LaTeX processes
+`\documentclass[parameter,a4paper]{augmented-book}` it does:
+
+1. The switch `\if@AB@parameter` is set to execute `true` path because
+   `parameter` is set.
+2. The `a4paper` is not known by this package so handler from
+   `\DeclareUnknownKeyHandler` is triggered and `\CurrentOption` is
+   set to `a4paper`.
+3. The `\PassOptionsToClass` sets `a4paper` as one of the parameters
+   to pass to `book` class.
+4. The `\LoadClass{book}` loads class `book` and passes `10pt` from
+   `\LoadClass` and `a4paper` from `\PassOptionsToClass`.
+
+The same technique can be used for packages by using
+`\PassOptionsToPackage`. More interesting that parameters from
+`\PassOptionsToPackage` will be passed regardless of which command
+loads package: `\RequirePackage` or `\usepackage`.
+
+### Passing Document Class Options
+
+Passing "temporary" options to document class is a task which requires
+some additional efforts because LaTeX commands (`latex`, `pdflatex`,
+`xelatex` etc) don't have any switch to pass extra option to document
+class or define any symbol. To get this done additional facility needs
+to be handcrafted.
+
+The LaTeX commands can accept as parameter not only file name but
+LaTeX command. So the following 2 invocations are completely the same:
+
+```
+latex source.tex
+```
+
+```
+latex '\input{source}'
+```
+
+This gives some flexibility because it is possible to use some LaTeX
+commands to alter behavior inside `source.tex`.
+
+The following options are available:
+
+1. Define a variable and use it inside.
+
+   For example, putting `\def\Handout{}\input{presentation}` allows to
+   write in the `presentation.tex`:
+
+   ```latex
+\documentclass[\Handout]{beamer}
+```
+
+   This effectively passes empty options to Beamer. But when build
+   system builds handouts it can rewrite command like
+   `\def\Handout{handout}\input{presentation}` giving instruction to
+   Beamer.
+
+   Although this is working and recommended scenario it has some
+   drawbacks when more than one option needs to be passed it this way
+   or another options already set in source file:
+
+   * The comma (`,`) sometimes needs to be added to `\def` even when
+     option is not passed.
+   * Empty (not passed)options sometimes might be handled as unknown
+     option. If target class is strict on its option this breaks
+     compilation.
+
+   The benefit of this solution that the defined value can be used on
+   any level including source file but in general it is a bad practice
+   because such depedencies in sources are extremely hard to trace.
+
+2. Request passing option directly to class with
+   `\PassOptionsToClass`.
+
+   For example, the
+   `\PassOptionsToClass{handout}{beamer}\input{presentation}` does the
+   same sample before.
+
+   At first glance the drawback of this solution is required knowledge
+   of the used document class in `presentation.tex`. But should not be
+   a problem:
+
+   * The class usually is known by nature of document and build
+     receipt.
+
+   * If document uses custom class which eventually loads specified
+     class via `\LoadClass` the option will be passed to it anyway
+     although this is a bad practice.
+
+ The same stuff can be used for packages with
+ `\PassOptionsToPackage{<options>}{<package>}`.
+
 ### A Word About Fonts
 
 The company style guide often refers to custom fonts. Historically
@@ -1057,7 +1203,7 @@ directory and images to `tex/generic/images/<subdir>` directory.
 When files placed according this guideline it is relatively easy to
 add them to TeX implementation.
 
-#### Integration with TeXLive/MacTex
+#### Integration With TeXLive/MacTex
 
 There are 2 ways to add repository with TDS structure to TeXLive:
 
@@ -1076,7 +1222,7 @@ There are 2 ways to add repository with TDS structure to TeXLive:
    configured the syntax with braces should be used:
    `{dir1:dir2:dir3}`.
 
-#### Integration with MikTeX
+#### Integration With MikTeX
 
 The `miktex-console` tool handles configuration information. The path
 to repository should be added to "TEXMF root directories" list on
@@ -1091,9 +1237,12 @@ recommendations above dramatically simplifies this work.
 
 ## Changelog
 
+6 September 2026
+: Add sections about handling document class parameters.
+
 27 August 2026
 : Add helper command to provide generic access to chapter
-  metainformation..
+  metainformation.
 
 18 August 2026
 : * Add information about Beamer customizations.
